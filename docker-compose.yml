@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: fedshield-db
+    environment:
+      POSTGRES_USER: fedshield
+      POSTGRES_PASSWORD: securepassword
+      POSTGRES_DB: fedshield_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fedshield -d fedshield_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fedshield-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://fedshield:securepassword@db:5432/fedshield_db
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/workspace
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fedshield-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
