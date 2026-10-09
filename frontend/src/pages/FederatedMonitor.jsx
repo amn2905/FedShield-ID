@@ -7,7 +7,12 @@ import {
   RefreshCw, 
   ArrowRight, 
   Layers, 
-  EyeOff 
+  EyeOff,
+  ShieldCheck,
+  Server,
+  Zap,
+  CheckCircle2,
+  Sliders
 } from 'lucide-react';
 
 const FederatedMonitor = ({ metrics, onTriggerRound }) => {
@@ -33,35 +38,48 @@ const FederatedMonitor = ({ metrics, onTriggerRound }) => {
     }
   };
 
-  // Mock weights table representing coefficient updates
-  // If we have actual weights in the metrics, use them, otherwise mock realistic values.
   const globalWeights = metrics?.global_weights || {
     coef: [1.8, 1.5, -2.8, 2.2, 3.0],
     intercept: -1.5
   };
   
-  const features = ["Transaction Amount", "Distance from Home", "Device Trust Score", "Location Deviation", "Synthetic Identity Flag"];
+  const features = [
+    "Transaction Amount", 
+    "Distance from Home", 
+    "Device Trust Score", 
+    "Location Deviation", 
+    "Synthetic Identity Flag"
+  ];
 
-  // Chart data for round metrics
   const rounds = metrics?.accuracy_history || [];
   const chartData = {
     labels: rounds.map(r => `R${r.round}`),
     datasets: [
       {
-        label: 'Accuracy (%)',
+        label: 'Global Accuracy (%)',
         data: rounds.map(r => r.accuracy),
-        borderColor: '#22d3ee',
-        backgroundColor: 'rgba(34, 211, 238, 0.1)',
+        borderColor: '#2563EB',
+        backgroundColor: 'rgba(37, 99, 235, 0.08)',
+        borderWidth: 2.5,
         tension: 0.3,
         yAxisID: 'y',
+        pointBackgroundColor: '#2563EB',
+        pointBorderColor: '#FFFFFF',
+        pointBorderWidth: 2,
+        pointRadius: 4,
       },
       {
-        label: 'Loss',
-        data: rounds.map(r => r.loss * 100), // Scale up loss for display on same chart or axis
-        borderColor: '#f43f5e',
-        backgroundColor: 'rgba(244, 63, 94, 0.1)',
+        label: 'Cross-Entropy Loss (x100)',
+        data: rounds.map(r => r.loss * 100),
+        borderColor: '#DC2626',
+        backgroundColor: 'rgba(220, 38, 38, 0.05)',
+        borderWidth: 2,
         tension: 0.3,
         yAxisID: 'y1',
+        pointBackgroundColor: '#DC2626',
+        pointBorderColor: '#FFFFFF',
+        pointBorderWidth: 2,
+        pointRadius: 3.5,
       }
     ]
   };
@@ -69,6 +87,23 @@ const FederatedMonitor = ({ metrics, onTriggerRound }) => {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: { 
+          color: '#475569', 
+          font: { family: 'Inter', size: 11, weight: '500' },
+          usePointStyle: true,
+          boxWidth: 8 
+        }
+      },
+      tooltip: {
+        backgroundColor: '#172033',
+        titleColor: '#FFFFFF',
+        bodyColor: '#E2E8F0',
+        padding: 8,
+        cornerRadius: 6,
+      }
+    },
     scales: {
       y: {
         type: 'linear',
@@ -76,8 +111,8 @@ const FederatedMonitor = ({ metrics, onTriggerRound }) => {
         position: 'left',
         min: 40,
         max: 100,
-        grid: { color: 'rgba(51, 65, 85, 0.1)' },
-        ticks: { color: '#22d3ee' }
+        grid: { color: '#F1F5F9' },
+        ticks: { color: '#2563EB', font: { size: 10, weight: '500' }, callback: v => `${v}%` }
       },
       y1: {
         type: 'linear',
@@ -86,49 +121,46 @@ const FederatedMonitor = ({ metrics, onTriggerRound }) => {
         min: 0,
         max: 100,
         grid: { drawOnChartArea: false },
-        ticks: { color: '#f43f5e' }
+        ticks: { color: '#DC2626', font: { size: 10, weight: '500' } }
       },
       x: {
-        grid: { color: 'rgba(51, 65, 85, 0.1)' },
-        ticks: { color: '#64748b' }
-      }
-    },
-    plugins: {
-      legend: {
-        labels: { color: '#94a3b8' }
+        grid: { color: '#F1F5F9' },
+        ticks: { color: '#64748B', font: { size: 10, weight: '500' } }
       }
     }
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
+      {/* Title */}
       <div>
-        <h2 className="text-3xl font-extrabold tracking-tight font-sans">
-          Federated Learning Control Center
+        <h2 className="text-xl font-extrabold tracking-tight text-[#172033] font-sans">
+          Federated Learning Control Center & Differential Privacy
         </h2>
-        <p className="text-slate-400 mt-1">
-          Coordinate global aggregation rounds, optimize differential privacy noise, and monitor model convergence.
+        <p className="text-xs text-[#64748B] mt-0.5">
+          Execute decentralized model aggregation rounds, inject calibrated Laplacian noise, and coordinate quantum-resistant weight handshakes.
         </p>
       </div>
 
-      {/* Main Layout Grid */}
+      {/* Main Grid: Left Controls + Right Visualizations */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        
-        {/* Left 1 Column: Controller Config Panel */}
-        <div className="glass-panel p-6 space-y-6">
-          <div className="border-b border-slate-800/80 pb-4">
-            <h3 className="font-semibold text-base font-sans text-cyan-400 flex items-center gap-2">
-              <Cpu size={18} />
+        {/* Left Column: Hyperparameter Controller */}
+        <div className="skeuo-panel p-5 space-y-5">
+          <div className="border-b border-[#F1F5F9] pb-3 flex items-center justify-between">
+            <h3 className="font-bold text-xs uppercase tracking-wider text-[#172033] flex items-center gap-2">
+              <Sliders size={15} className="text-blue-600" />
               Round Hyperparameters
             </h3>
+            <span className="skeuo-badge skeuo-badge-info">FedAvg</span>
           </div>
 
-          {/* Privacy Budget Epsilon Slider */}
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-slate-300 font-medium">Privacy Budget (ε - Epsilon)</span>
-              <span className="text-cyan-400 font-mono font-bold">{epsilon.toFixed(1)}</span>
+          {/* Privacy Budget Slider */}
+          <div className="space-y-2.5">
+            <div className="flex justify-between text-xs">
+              <span className="text-[#64748B] font-semibold">Privacy Budget (ε - Epsilon)</span>
+              <span className="text-blue-700 font-mono font-bold text-sm">ε = {epsilon.toFixed(1)}</span>
             </div>
+            
             <input 
               type="range" 
               min="0.5" 
@@ -137,251 +169,247 @@ const FederatedMonitor = ({ metrics, onTriggerRound }) => {
               value={epsilon}
               onChange={(e) => setEpsilon(parseFloat(e.target.value))}
               disabled={isRunning}
-              className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+              className="w-full h-2 bg-[#E9EDF2] rounded-lg appearance-none cursor-pointer accent-blue-600 shadow-inner"
             />
-            <div className="flex justify-between items-center text-[11px] text-slate-500">
-              <span className="flex items-center gap-1">
-                <Lock size={10} /> Strong Privacy (More Noise)
+            
+            <div className="flex justify-between items-center text-[10px] text-[#64748B]">
+              <span className="flex items-center gap-1 font-medium">
+                <Lock size={10} className="text-emerald-600" /> High Privacy (More Noise)
               </span>
-              <span className="flex items-center gap-1">
-                Weak Privacy (Less Noise) <EyeOff size={10} />
+              <span className="flex items-center gap-1 font-medium">
+                High Utility (Less Noise) <EyeOff size={10} className="text-amber-600" />
               </span>
             </div>
             
             {/* DP Info Box */}
-            <div className="bg-slate-900/60 rounded-xl p-4 border border-slate-800/60 mt-2 space-y-1">
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400">Resulting Privacy Score:</span>
-                <span className="font-bold text-emerald-400">{getPrivacyScore(epsilon)}%</span>
+            <div className="bg-[#F8FAFC] rounded-xl p-3.5 border border-[#DCE3EB] space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-[#64748B]">DP Privacy Guarantee:</span>
+                <span className="font-bold text-emerald-700">{getPrivacyScore(epsilon)}% (Strict)</span>
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400">Laplacian Noise Scale:</span>
-                <span className="font-mono text-cyan-300">{round(0.5 / (epsilon * Math.log(400)), 4)}</span>
+              <div className="flex justify-between">
+                <span className="text-[#64748B]">Laplacian Noise Scale (b):</span>
+                <span className="font-mono font-bold text-[#172033]">{round(0.5 / (epsilon * Math.log(400)), 4)}</span>
               </div>
             </div>
           </div>
 
-          {/* Encryption Mode Selector */}
-          <div className="space-y-3">
-            <label className="text-sm text-slate-300 font-medium block">
-              Communication Security Mode
+          {/* Communication Security Mode */}
+          <div className="space-y-2.5">
+            <label className="text-xs font-semibold text-[#64748B] block">
+              Parameter Transfer Cryptography
             </label>
-            <div className="grid grid-cols-2 gap-3 bg-slate-950 p-1 rounded-xl border border-slate-900">
+            <div className="grid grid-cols-2 gap-2 bg-[#F1F5F9] p-1 rounded-xl border border-[#DCE3EB]">
               <button
                 type="button"
                 onClick={() => setEncryptionMode('PQC')}
                 disabled={isRunning}
-                className={`py-2 px-3 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
+                className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all ${
                   encryptionMode === 'PQC'
-                    ? 'bg-purple-900/50 border border-purple-800 text-purple-300 shadow'
-                    : 'text-slate-500 hover:text-slate-300'
+                    ? 'bg-white text-purple-700 shadow-sm border border-[#DCE3EB]'
+                    : 'text-[#64748B] hover:text-[#172033]'
                 }`}
               >
-                Post-Quantum (Kyber)
+                Kyber-768 PQC
               </button>
               <button
                 type="button"
                 onClick={() => setEncryptionMode('Traditional')}
                 disabled={isRunning}
-                className={`py-2 px-3 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
+                className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all ${
                   encryptionMode === 'Traditional'
-                    ? 'bg-blue-900/30 border border-blue-800/80 text-blue-400 shadow'
-                    : 'text-slate-500 hover:text-slate-300'
+                    ? 'bg-white text-blue-700 shadow-sm border border-[#DCE3EB]'
+                    : 'text-[#64748B] hover:text-[#172033]'
                 }`}
               >
-                Traditional (ECDH)
+                ECDH-P256 TLS
               </button>
             </div>
-            <p className="text-[10px] text-slate-500 leading-normal">
+            <p className="text-[11px] text-[#64748B] leading-relaxed">
               {encryptionMode === 'PQC' 
-                ? 'Secures parameter transfers using CRYSTALS-Kyber quantum-resistant key encapsulation and AES-256-GCM.' 
-                : 'Secures updates via standard Elliptic Curve Diffie-Hellman (ECDH) key exchange. Vulnerable to Shor\'s algorithm.'
+                ? 'Secures parameter transfers using CRYSTALS-Kyber post-quantum lattice encryption + AES-256-GCM.' 
+                : 'Secures updates via standard Elliptic Curve Diffie-Hellman (ECDH) key exchange.'
               }
             </p>
           </div>
 
-          {/* Run Federated Round Button */}
+          {/* Trigger Round Action */}
           <button
             onClick={handleRunRound}
             disabled={isRunning}
-            className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold transition-all ${
+            className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all ${
               isRunning 
-                ? 'bg-slate-900 text-slate-500 cursor-not-allowed border border-slate-800' 
-                : 'bg-gradient-to-r from-cyan-500 to-purple-600 text-white shadow-glow hover:opacity-95'
+                ? 'bg-[#E2E8F0] text-[#64748B] cursor-not-allowed border border-[#CBD5E1]' 
+                : 'skeuo-btn-primary'
             }`}
           >
             {isRunning ? (
               <>
-                <RefreshCw size={16} className="animate-spin" />
-                Aggregating Model...
+                <RefreshCw size={14} className="animate-spin" />
+                <span>Aggregating Enclave Weights...</span>
               </>
             ) : (
               <>
-                <RefreshCw size={16} />
-                Trigger Federated Round
+                <RefreshCw size={14} />
+                <span>Execute Federated Round</span>
               </>
             )}
           </button>
+
+          {roundLog.length > 0 && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1 text-xs animate-fade-in">
+              <div className="flex items-center gap-1.5 font-bold text-emerald-800">
+                <CheckCircle2 size={13} className="text-emerald-600" />
+                <span>Round #{roundLog[0].round_number} Synced</span>
+              </div>
+              <div className="text-[11px] text-[#475569]">
+                Accuracy: <strong>{(roundLog[0].global_accuracy * 100).toFixed(1)}%</strong> • Mode: <strong>{roundLog[0].encryption_mode}</strong>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Right 2 Columns: Network Visualization & Round Stats */}
+        {/* Right 2 Columns: Network Architecture Diagram & Accuracy Chart */}
         <div className="xl:col-span-2 space-y-6">
-          
-          {/* Network Diagram */}
-          <div className="glass-panel p-6 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
-            
+          {/* Visual Network Architecture Diagram */}
+          <div className="skeuo-panel p-6 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden bg-gradient-to-r from-white via-[#FAFCFD] to-blue-50/20">
             {/* Bank Node A */}
             <div className="flex flex-col items-center gap-1.5">
-              <div className="bg-slate-950 p-4 rounded-xl border border-purple-800/60 shadow-lg text-center w-28 relative">
-                <div className="h-1.5 w-1.5 rounded-full bg-purple-500 absolute top-2 right-2 animate-pulse" />
-                <span className="text-xs font-bold font-sans">Bank A</span>
-                <span className="text-[10px] text-slate-500 block">Retail Node</span>
+              <div className="bg-white p-3.5 rounded-xl border border-[#DCE3EB] shadow-sm text-center w-28 relative">
+                <span className="w-2 h-2 rounded-full bg-purple-600 absolute top-2 right-2 animate-pulse" />
+                <span className="text-xs font-bold text-[#172033] block">Bank A</span>
+                <span className="text-[10px] text-[#64748B] font-mono block">Random Forest</span>
               </div>
-              <span className="text-[10px] text-purple-400 font-semibold uppercase font-mono px-2 py-0.5 rounded bg-purple-950/20 border border-purple-900/40">
+              <span className="skeuo-badge skeuo-badge-info text-[9px]">
                 Kyber Tunnel
               </span>
             </div>
 
-            {/* Transfer Arrows */}
-            <div className="flex flex-col items-center flex-1 justify-center relative min-w-[30px] min-h-[40px] md:min-h-0">
-              <div className="flex gap-1 items-center">
-                <span className="h-1 w-8 md:w-16 bg-gradient-to-r from-purple-500 to-cyan-400 rounded-full animate-pulse-glow" />
-                <ArrowRight size={14} className="text-cyan-400 animate-pulse" />
-              </div>
+            {/* Ingress Arrow */}
+            <div className="flex items-center gap-1">
+              <span className="h-0.5 w-12 bg-blue-300"></span>
+              <ArrowRight size={14} className="text-blue-600" />
             </div>
 
-            {/* Central Aggregator */}
-            <div className="flex flex-col items-center gap-2">
-              <div className="bg-gradient-to-tr from-cyan-900/60 to-purple-900/40 p-6 rounded-2xl border border-cyan-500/30 shadow-glow text-center w-36 relative">
-                <div className="h-2 w-2 rounded-full bg-cyan-400 absolute top-3 right-3 animate-ping" />
-                <Layers className="mx-auto text-cyan-400 mb-2" size={24} />
-                <span className="text-xs font-black tracking-wider uppercase font-sans">Aggregator</span>
-                <span className="text-[9px] text-cyan-300 block font-semibold mt-1 bg-slate-950/60 border border-cyan-800/40 rounded px-1.5 py-0.5">
+            {/* Central Aggregator Node */}
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="bg-gradient-to-b from-blue-50 to-blue-100 p-5 rounded-2xl border border-blue-200 shadow-sm text-center w-36 relative">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute top-2.5 right-2.5 animate-pulse" />
+                <Layers className="mx-auto text-blue-700 mb-1" size={24} />
+                <span className="text-xs font-extrabold uppercase tracking-wider text-[#172033] block">Aggregator</span>
+                <span className="text-[9px] font-bold text-blue-800 bg-white/90 border border-blue-200 rounded px-1.5 py-0.5 mt-1 inline-block">
                   FedAvg Server
                 </span>
               </div>
             </div>
 
-            {/* Transfer Arrows */}
-            <div className="flex flex-col items-center flex-1 justify-center relative min-w-[30px] min-h-[40px] md:min-h-0">
-              <div className="flex gap-1 items-center">
-                <ArrowRight size={14} className="text-cyan-400 rotate-180 md:rotate-0" />
-                <span className="h-1 w-8 md:w-16 bg-gradient-to-r from-emerald-500 to-cyan-400 rounded-full animate-pulse-glow" />
-              </div>
+            {/* Egress Arrow */}
+            <div className="flex items-center gap-1">
+              <span className="h-0.5 w-12 bg-blue-300"></span>
+              <ArrowRight size={14} className="text-blue-600" />
             </div>
 
-            {/* Bank Node B / C Column */}
-            <div className="flex flex-col gap-4">
-              {/* Bank B */}
-              <div className="flex flex-col items-center gap-1">
-                <div className="bg-slate-950 p-4 rounded-xl border border-emerald-800/60 shadow-lg text-center w-28 relative">
-                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 absolute top-2 right-2 animate-pulse" />
-                  <span className="text-xs font-bold font-sans">Bank B</span>
-                  <span className="text-[10px] text-slate-500 block">Premium Cards</span>
-                </div>
+            {/* Bank Nodes B & C */}
+            <div className="flex flex-col gap-2.5">
+              <div className="bg-white p-2.5 rounded-xl border border-[#DCE3EB] shadow-sm text-center w-28 relative">
+                <span className="w-2 h-2 rounded-full bg-emerald-600 absolute top-2 right-2 animate-pulse" />
+                <span className="text-xs font-bold text-[#172033] block">Bank B</span>
+                <span className="text-[10px] text-[#64748B] font-mono block">XGBoost</span>
               </div>
-              {/* Bank C */}
-              <div className="flex flex-col items-center gap-1">
-                <div className="bg-slate-950 p-4 rounded-xl border border-cyan-800/60 shadow-lg text-center w-28 relative">
-                  <div className="h-1.5 w-1.5 rounded-full bg-cyan-500 absolute top-2 right-2 animate-pulse" />
-                  <span className="text-xs font-bold font-sans">Bank C</span>
-                  <span className="text-[10px] text-slate-500 block">Micro Savings</span>
-                </div>
+              <div className="bg-white p-2.5 rounded-xl border border-[#DCE3EB] shadow-sm text-center w-28 relative">
+                <span className="w-2 h-2 rounded-full bg-amber-600 absolute top-2 right-2 animate-pulse" />
+                <span className="text-xs font-bold text-[#172033] block">Bank C</span>
+                <span className="text-[10px] text-[#64748B] font-mono block">LightGBM</span>
               </div>
             </div>
-
           </div>
 
-          {/* Accuracy vs Loss convergence graph */}
-          <div className="glass-panel p-6 space-y-4">
-            <div className="flex justify-between items-center">
+          {/* Accuracy & Loss Convergence Chart */}
+          <div className="skeuo-panel p-5 space-y-3">
+            <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-2">
               <div>
-                <h3 className="font-semibold text-base font-sans">
+                <h3 className="font-bold text-xs uppercase tracking-wider text-[#172033]">
                   Model Convergence History
                 </h3>
-                <p className="text-xs text-slate-500">
-                  Dual-axis showing global validation accuracy vs cross-entropy loss.
+                <p className="text-[11px] text-[#64748B]">
+                  Global test accuracy progression vs cross-entropy loss across aggregation rounds
                 </p>
               </div>
-              <div className="text-xs text-slate-400">
-                Current Accuracy:{' '}
-                <span className="font-bold text-cyan-400">
-                  {metrics?.model_accuracy_percent || '82.5'}%
-                </span>
+              <div className="text-xs text-[#64748B]">
+                Current Accuracy: <span className="font-bold text-blue-700">{metrics?.model_accuracy_percent || '82.5'}%</span>
               </div>
             </div>
-            <div className="h-60 relative">
+            <div className="h-56 relative pt-2">
               <Line data={chartData} options={chartOptions} />
             </div>
           </div>
-
         </div>
-
       </div>
 
-      {/* Numerical weights/coefficients table */}
-      <div className="glass-panel p-6 space-y-4">
-        <div>
-          <h3 className="font-semibold text-base font-sans">
-            Federated Model Weights & Coefficients Vector
+      {/* Global Model Weights & Coefficients Table */}
+      <div className="skeuo-panel p-5 space-y-3">
+        <div className="border-b border-[#F1F5F9] pb-2">
+          <h3 className="font-bold text-xs uppercase tracking-wider text-[#172033]">
+            Federated Model Parameter Weights & Feature Coefficients
           </h3>
-          <p className="text-xs text-slate-500">
-            Real coefficients aggregated using FedAvg. These represent the mathematical features the model uses to verify trust.
+          <p className="text-[11px] text-[#64748B]">
+            Mathematical weights aggregated using Federated Averaging. Used directly by the identity trust prediction engine.
           </p>
         </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse">
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                <th className="py-3 px-4">Feature Vector Component</th>
-                <th className="py-3 px-4">Average Feature Weight (Global)</th>
-                <th className="py-3 px-4">Risk Contribution direction</th>
-                <th className="py-3 px-4">Relative Sensitivity</th>
+              <tr className="border-b border-[#DCE3EB] text-[#64748B] font-semibold uppercase tracking-wider bg-[#F8FAFC]">
+                <th className="py-2.5 px-4 rounded-l-lg">Feature Vector Component</th>
+                <th className="py-2.5 px-4">Global Coefficient</th>
+                <th className="py-2.5 px-4">Risk Contribution Direction</th>
+                <th className="py-2.5 px-4 rounded-r-lg">Relative Sensitivity</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-[#F1F5F9] text-[#172033]">
               {features.map((feature, idx) => {
                 const val = globalWeights.coef[idx] || 0.0;
                 return (
-                  <tr key={feature} className="hover:bg-slate-900/20 transition-colors">
-                    <td className="py-4 px-4 font-semibold text-slate-300">{feature}</td>
-                    <td className="py-4 px-4 font-mono text-cyan-400 font-bold">
+                  <tr key={feature} className="hover:bg-[#F8FAFC] transition-colors">
+                    <td className="py-3 px-4 font-bold text-[#172033]">{feature}</td>
+                    <td className="py-3 px-4 font-mono font-bold text-blue-700">
                       {val.toFixed(4)}
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="py-3 px-4">
                       {val > 0 ? (
-                        <span className="text-xs font-semibold text-red-400 bg-red-950/40 border border-red-900/60 px-2.5 py-0.5 rounded">
-                          POS COMPONENT (Increases Risk Score Deviation)
+                        <span className="skeuo-badge skeuo-badge-danger">
+                          + Increases Risk Shift
                         </span>
                       ) : (
-                        <span className="text-xs font-semibold text-emerald-400 bg-emerald-950/40 border border-emerald-900/60 px-2.5 py-0.5 rounded">
-                          NEG COMPONENT (Suppresses Risk Score Deviation)
+                        <span className="skeuo-badge skeuo-badge-success">
+                          - Suppresses Risk Shift
                         </span>
                       )}
                     </td>
-                    <td className="py-4 px-4">
-                      <div className="w-full bg-slate-800 rounded-full h-1.5 max-w-[200px]">
+                    <td className="py-3 px-4">
+                      <div className="skeuo-well h-2 max-w-[200px] overflow-hidden">
                         <div 
-                          className="bg-cyan-400 h-1.5 rounded-full" 
-                          style={{ width: `${Math.min(100, Math.abs(val) * 30)}%` }}
+                          className={`h-full rounded-full ${val > 0 ? 'bg-red-500' : 'bg-emerald-500'}`}
+                          style={{ width: `${Math.min(100, Math.abs(val) * 32)}%` }}
                         />
                       </div>
                     </td>
                   </tr>
                 );
               })}
-              <tr className="bg-slate-900/10">
-                <td className="py-4 px-4 font-bold text-slate-300">Model Bias (Intercept)</td>
-                <td className="py-4 px-4 font-mono text-purple-400 font-bold">
+              <tr className="bg-[#F8FAFC]">
+                <td className="py-3 px-4 font-bold text-[#172033]">Model Bias (Intercept)</td>
+                <td className="py-3 px-4 font-mono font-bold text-purple-700">
                   {Number(globalWeights.intercept).toFixed(4)}
                 </td>
-                <td className="py-4 px-4">
-                  <span className="text-xs font-semibold text-slate-400 bg-slate-950/60 border border-slate-900 px-2.5 py-0.5 rounded">
-                    Global Base Prior Probability
+                <td className="py-3 px-4">
+                  <span className="skeuo-badge skeuo-badge-neutral">
+                    Global Base Baseline
                   </span>
                 </td>
-                <td className="py-4 px-4 text-slate-500 font-mono text-xs">
-                  {round(100 / (1 + Math.exp(-globalWeights.intercept)), 2)}% base risk probability
+                <td className="py-3 px-4 text-[#64748B] font-mono text-[11px]">
+                  {round(100 / (1 + Math.exp(-globalWeights.intercept)), 2)}% prior baseline probability
                 </td>
               </tr>
             </tbody>

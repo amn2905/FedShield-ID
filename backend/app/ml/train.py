@@ -45,6 +45,19 @@ class LocalBankModel:
 
         X, y = self._prepare_data(df)
         
+        # Ensure both classes exist so scikit-learn doesn't raise single-class error
+        if len(np.unique(y)) < 2:
+            missing_class = 1 if 0 in y else 0
+            dummy_sample = pd.DataFrame([{
+                "amount": 5000.0 if missing_class == 1 else 50.0,
+                "distance_from_home": 500.0 if missing_class == 1 else 2.0,
+                "device_trust_score": 10.0 if missing_class == 1 else 95.0,
+                "location_deviation": 100.0 if missing_class == 1 else 0.0,
+                "is_synthetic": 1.0 if missing_class == 1 else 0.0
+            }])
+            X = pd.concat([X, dummy_sample], ignore_index=True)
+            y = np.append(y, missing_class)
+
         # Scale features
         self.scaler.fit(X)
         X_scaled = self.scaler.transform(X)
@@ -53,7 +66,6 @@ class LocalBankModel:
         self.rf_model.fit(X, y)
         
         # Fit SGDClassifier (for federated parameter weights)
-        # We perform partial fit or standard fit
         self.linear_model.fit(X_scaled, y)
         
         self.is_trained = True

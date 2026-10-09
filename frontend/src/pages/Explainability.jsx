@@ -5,9 +5,13 @@ import {
   Info, 
   ShieldAlert, 
   TrendingUp, 
-  Sparkles,
-  CheckSquare,
-  AlertOctagon
+  Sparkles, 
+  CheckSquare, 
+  AlertOctagon,
+  ShieldCheck,
+  CheckCircle2,
+  AlertTriangle,
+  FileText
 } from 'lucide-react';
 
 const Explainability = ({ selectedTxId, transactions, fetchXAIExplanation, fetchGenAIReport }) => {
@@ -16,7 +20,6 @@ const Explainability = ({ selectedTxId, transactions, fetchXAIExplanation, fetch
   const [genAiReport, setGenAiReport] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch explanation and GenAI report
   useEffect(() => {
     const loadData = async () => {
       const activeId = selectedTxId || txId;
@@ -39,24 +42,24 @@ const Explainability = ({ selectedTxId, transactions, fetchXAIExplanation, fetch
   }, [selectedTxId, txId]);
 
   const currentTx = transactions.find(t => t.id === (selectedTxId || txId));
-  const flaggedTransactions = transactions.filter(t => t.prediction === 1).slice(0, 6);
+  const flaggedTransactions = transactions.filter(t => t.prediction === 1).slice(0, 8);
 
   const getShapChartData = () => {
     if (!explanationData) return null;
     const shapVals = explanationData.shap_values;
     const featureLabels = {
       amount: "Transaction Amount",
-      distance_from_home: "Distance from Home",
+      distance_from_home: "Distance Deviation",
       device_trust_score: "Device Reputation",
-      location_deviation: "Location Deviation",
+      location_deviation: "Location Drift",
       is_synthetic: "Synthetic Identity Flag"
     };
 
     const labels = Object.keys(shapVals).map(k => featureLabels[k] || k);
     const data = Object.values(shapVals).map(v => v * 100);
     
-    const colors = data.map(v => v >= 0 ? 'rgba(239, 68, 68, 0.8)' : 'rgba(16, 185, 129, 0.8)');
-    const borderColors = data.map(v => v >= 0 ? '#ef4444' : '#10b981');
+    const colors = data.map(v => v >= 0 ? 'rgba(220, 38, 38, 0.85)' : 'rgba(16, 185, 129, 0.85)');
+    const borderColors = data.map(v => v >= 0 ? '#DC2626' : '#059669');
 
     return {
       labels,
@@ -80,6 +83,10 @@ const Explainability = ({ selectedTxId, transactions, fetchXAIExplanation, fetch
     plugins: {
       legend: { display: false },
       tooltip: {
+        backgroundColor: '#172033',
+        titleColor: '#FFFFFF',
+        bodyColor: '#E2E8F0',
+        padding: 8,
         callbacks: {
           label: (context) => `${context.raw >= 0 ? '+' : ''}${context.raw.toFixed(2)}% risk shift`
         }
@@ -87,248 +94,234 @@ const Explainability = ({ selectedTxId, transactions, fetchXAIExplanation, fetch
     },
     scales: {
       x: {
-        grid: { color: 'rgba(51, 65, 85, 0.1)' },
+        grid: { color: '#F1F5F9' },
         ticks: { 
-          color: '#94a3b8',
-          callback: (value) => `${value >= 0 ? '+' : ''}${value}%`
+          color: '#64748B',
+          callback: (value) => `${value >= 0 ? '+' : ''}${value}%`,
+          font: { size: 9, family: 'Inter' }
         }
       },
       y: {
         grid: { display: false },
-        ticks: { color: '#e2e8f0', font: { family: 'Inter', weight: '500', size: 10 } }
+        ticks: { color: '#172033', font: { family: 'Inter', weight: '600', size: 10 } }
       }
     }
   };
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Title */}
       <div>
-        <h2 className="text-2xl font-extrabold tracking-tight font-sans">
-          Explainable AI (XAI) & GenAI Audit Center
+        <h2 className="text-xl font-extrabold tracking-tight text-[#172033] font-sans">
+          Explainable AI (XAI) & Forensic Audit Center
         </h2>
-        <p className="text-xs text-slate-400 mt-1">
-          Inspect mathematical feature attributions and read automatically compiled GenAI security filings.
+        <p className="text-xs text-[#64748B] mt-0.5">
+          Mathematical SHAP feature attributions and automated GenAI investigative briefings for regulatory audit trails.
         </p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        
-        {/* Left Column: Quick Select Alerts */}
-        <div className="glass-panel p-5 space-y-4">
-          <div>
-            <h3 className="font-semibold text-xs font-sans text-slate-300 uppercase tracking-wider">
-              Alerts Directory
+        {/* Left Column: Quick Select Incidents */}
+        <div className="skeuo-panel p-4 space-y-3">
+          <div className="border-b border-[#F1F5F9] pb-2">
+            <h3 className="font-bold text-xs uppercase tracking-wider text-[#172033]">
+              Flagged Incidents Roster
             </h3>
-            <p className="text-[10px] text-slate-500 mt-0.5">
-              Select any incident below to inspect metrics.
-            </p>
+            <p className="text-[10px] text-[#64748B]">Select an incident to audit model attribution</p>
           </div>
           
-          <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1">
-            {flaggedTransactions.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => {
-                  setTxId(t.id);
-                  setExplanationData(null);
-                  setGenAiReport(null);
-                }}
-                className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
-                  (selectedTxId || txId) === t.id
-                    ? 'bg-slate-900 border-cyan-500/50 shadow-glow'
-                    : 'bg-slate-950 border-slate-900 hover:border-slate-800'
-                }`}
-              >
-                <div className="space-y-0.5">
-                  <span className="text-[9px] text-slate-400 font-semibold font-mono block">
-                    ID #{t.id} • {t.bank}
+          <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+            {flaggedTransactions.length === 0 ? (
+              <div className="text-center py-10 text-xs text-[#64748B]">
+                No flagged incidents in current ledger. Trigger a threat simulation above.
+              </div>
+            ) : (
+              flaggedTransactions.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    setTxId(t.id);
+                    setExplanationData(null);
+                    setGenAiReport(null);
+                  }}
+                  className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
+                    (selectedTxId || txId) === t.id
+                      ? 'bg-blue-50/90 border-blue-300 text-blue-900 shadow-sm'
+                      : 'bg-white border-[#DCE3EB] hover:bg-[#F8FAFC] text-[#172033]'
+                  }`}
+                >
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] text-[#64748B] font-mono block">
+                      TX #{t.id} • {t.bank}
+                    </span>
+                    <span className="text-xs font-bold block truncate max-w-[130px]">
+                      {t.customer_name}
+                    </span>
+                    <span className="text-[10px] text-red-600 font-bold block">
+                      Risk: {t.risk_score?.toFixed(1)}%
+                    </span>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-[#172033]">
+                    ${t.amount?.toFixed(0)}
                   </span>
-                  <span className="text-xs font-bold text-slate-200 block truncate max-w-[130px]">
-                    {t.customer_name}
-                  </span>
-                  <span className="text-[9px] text-red-400 font-semibold font-mono block">
-                    Risk: {t.risk_score.toFixed(1)}%
-                  </span>
-                </div>
-                <span className="text-xs font-bold font-mono text-slate-200">
-                  ${t.amount.toFixed(0)}
-                </span>
-              </button>
-            ))}
+                </button>
+              ))
+            )}
           </div>
         </div>
 
         {/* Right Columns: SHAP Chart & GenAI Briefing */}
         <div className="xl:col-span-3 space-y-6">
-          
           {loading ? (
-            <div className="glass-panel p-20 flex justify-center items-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-cyan-400"></div>
+            <div className="skeuo-panel p-20 flex flex-col items-center justify-center space-y-2">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+              <span className="text-xs text-[#64748B]">Generating mathematical SHAP decomposition and SOC filing...</span>
             </div>
           ) : !explanationData || !currentTx ? (
-            <div className="glass-panel p-16 text-center text-slate-500 space-y-3">
-              <Eye size={36} className="mx-auto text-slate-600 animate-pulse" />
-              <p className="text-xs">No transaction currently loaded for regulator audit.</p>
-              <p className="text-[10px] text-slate-600">Select an alert from the ledger or run an attack simulation.</p>
+            <div className="skeuo-panel p-16 text-center text-[#64748B] space-y-3">
+              <Eye size={36} className="mx-auto text-[#94A3B8]" />
+              <p className="text-xs font-medium">No transaction currently loaded for regulator audit.</p>
+              <p className="text-[11px] text-[#94A3B8]">Select an incident from the ledger on the left or inject an attack from the top header.</p>
             </div>
           ) : (
             <>
-              {/* Transaction details card */}
-              <div className="glass-panel p-4 grid grid-cols-2 md:grid-cols-4 gap-4 relative overflow-hidden">
-                <div className="absolute top-0 right-0 h-0.5 w-full bg-gradient-to-r from-red-500 via-purple-600 to-cyan-400" />
-                
+              {/* Incident Header Summary */}
+              <div className="skeuo-panel p-4 grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#F8FAFC]">
                 <div className="space-y-0.5">
-                  <span className="text-[9px] uppercase font-bold text-slate-500">Origin Node</span>
-                  <p className="text-xs font-semibold text-slate-200">{currentTx.bank}</p>
+                  <span className="text-[9px] uppercase font-bold text-[#64748B]">Origin Node</span>
+                  <p className="text-xs font-bold text-[#172033]">{currentTx.bank}</p>
                 </div>
                 <div className="space-y-0.5">
-                  <span className="text-[9px] uppercase font-bold text-slate-500">Customer Name</span>
-                  <p className="text-xs font-semibold text-slate-200">{currentTx.customer_name}</p>
+                  <span className="text-[9px] uppercase font-bold text-[#64748B]">Customer Name</span>
+                  <p className="text-xs font-bold text-[#172033]">{currentTx.customer_name}</p>
                 </div>
                 <div className="space-y-0.5">
-                  <span className="text-[9px] uppercase font-bold text-slate-500">Clear Amount</span>
-                  <p className="text-xs font-bold text-slate-100 font-mono">${currentTx.amount.toFixed(2)}</p>
+                  <span className="text-[9px] uppercase font-bold text-[#64748B]">Clearance Value</span>
+                  <p className="text-xs font-bold font-mono text-[#172033]">${currentTx.amount?.toFixed(2)}</p>
                 </div>
                 <div className="space-y-0.5">
-                  <span className="text-[9px] uppercase font-bold text-slate-500">Identity Trust Alert Class</span>
-                  <p className="text-xs font-extrabold text-red-400 flex items-center gap-1">
-                    <ShieldAlert size={12} />
-                    {currentTx.fraud_type !== "None" ? currentTx.fraud_type : "Standard Risk Deviation"}
+                  <span className="text-[9px] uppercase font-bold text-[#64748B]">Threat Classification</span>
+                  <p className="text-xs font-black text-red-600 flex items-center gap-1">
+                    <ShieldAlert size={13} />
+                    {currentTx.fraud_type !== "None" ? currentTx.fraud_type : "Risk Anomaly"}
                   </p>
                 </div>
               </div>
- 
-              {/* GenAI security Analyst Briefing (Upgraded V2!) */}
+
+              {/* GenAI Forensic Briefing */}
               {genAiReport && (
-                <div className="glass-panel p-5 space-y-4 border border-purple-500/20 bg-purple-950/5 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 h-full w-1 bg-purple-500 animate-pulse" />
-                  
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <h3 className="font-semibold text-sm font-sans text-purple-300 flex items-center gap-1.5">
-                      <Sparkles size={15} className="text-purple-400 animate-pulse" />
-                      GenAI Identity Trust Briefing
+                <div className="skeuo-panel p-5 space-y-4 border-l-4 border-l-purple-600 bg-gradient-to-r from-purple-50/20 to-white">
+                  <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-2">
+                    <h3 className="font-bold text-xs uppercase tracking-wider text-purple-900 flex items-center gap-1.5">
+                      <Sparkles size={14} className="text-purple-600" />
+                      GenAI Regulatory Forensic Briefing
                     </h3>
-                    <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase ${
-                      genAiReport.risk_color === 'red' ? 'bg-red-950/60 border border-red-800 text-red-300' :
-                      genAiReport.risk_color === 'orange' ? 'bg-orange-950/60 border border-orange-800 text-orange-300' :
-                      genAiReport.risk_color === 'yellow' ? 'bg-yellow-950/60 border border-yellow-800 text-yellow-300' :
-                      'bg-emerald-950/60 border border-emerald-800 text-emerald-300'
-                    }`}>
-                      {genAiReport.identity_trust_status || genAiReport.risk_rating}
+                    <span className="skeuo-badge skeuo-badge-info">
+                      {genAiReport.identity_trust_status || genAiReport.risk_rating || "Evaluated"}
                     </span>
                   </div>
- 
-                  <div className="space-y-3 text-xs leading-relaxed text-slate-300">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-slate-900 pb-3">
+
+                  <div className="space-y-3 text-xs leading-relaxed text-[#172033]">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border-b border-[#F1F5F9] pb-3">
                       <div>
-                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">Identity Trust Status</span>
-                        <span className={`font-black text-xs block mt-1 uppercase ${
-                          genAiReport.risk_color === 'red' ? 'text-red-400' :
-                          genAiReport.risk_color === 'orange' ? 'text-orange-400' :
-                          genAiReport.risk_color === 'yellow' ? 'text-yellow-400' :
-                          'text-emerald-400'
-                        }`}>
-                          {genAiReport.identity_trust_status || "High Risk"}
+                        <span className="text-[9px] text-[#64748B] uppercase font-bold tracking-wider block">Decision Verdict</span>
+                        <span className="font-extrabold text-xs block mt-0.5 text-red-600">
+                          {genAiReport.identity_trust_status || "High Risk Flag"}
                         </span>
                       </div>
                       <div className="md:col-span-2">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">Recommended Action</span>
-                        <span className="font-extrabold text-xs text-slate-200 block mt-1 bg-slate-950 border border-slate-900 px-2.5 py-1 rounded-lg">
-                          {genAiReport.recommended_action || "Trigger Step-Up Authentication"}
+                        <span className="text-[9px] text-[#64748B] uppercase font-bold tracking-wider block">Recommended Action</span>
+                        <span className="font-semibold text-xs text-blue-700 block mt-0.5">
+                          {genAiReport.recommended_action || "Step-Up Multi-Factor Challenge Required"}
                         </span>
                       </div>
                     </div>
- 
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Detected Issues */}
                       <div className="space-y-1.5">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1">
-                          <AlertOctagon size={11} className="text-red-400" />
-                          Detected Issues
+                        <span className="text-[9px] text-[#64748B] uppercase font-bold tracking-wider flex items-center gap-1">
+                          <AlertOctagon size={11} className="text-red-600" />
+                          Detected Discrepancies
                         </span>
-                        <div className="flex flex-wrap gap-1.5 mt-1">
+                        <div className="flex flex-wrap gap-1">
                           {(genAiReport.detected_issues || genAiReport.detected_risks || []).map((issue, idx) => (
-                            <span key={idx} className="bg-red-950/20 text-red-400 border border-red-900/30 px-2 py-0.5 rounded text-[10px] font-semibold">
+                            <span key={idx} className="skeuo-badge skeuo-badge-danger text-[9px]">
                               {issue}
                             </span>
                           ))}
                         </div>
-                        <ul className="list-disc pl-4 space-y-1 text-slate-400 text-[10px] mt-2 leading-normal">
-                          {genAiReport.anomalies_detected.map((item, idx) => (
+                        <ul className="list-disc pl-4 space-y-1 text-[#475569] text-[11px] mt-1.5">
+                          {(genAiReport.anomalies_detected || []).map((item, idx) => (
                             <li key={idx}>{item}</li>
                           ))}
                         </ul>
                       </div>
                       
-                      {/* Recommended Mitigation Playbook */}
+                      {/* Remediation Playbook */}
                       <div className="space-y-1.5">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider flex items-center gap-1">
-                          <CheckSquare size={11} className="text-emerald-400" />
-                          Recommended Mitigation Actions
+                        <span className="text-[9px] text-[#64748B] uppercase font-bold tracking-wider flex items-center gap-1">
+                          <CheckSquare size={11} className="text-emerald-600" />
+                          Remediation Playbook Steps
                         </span>
-                        <ul className="list-decimal pl-4 space-y-1 text-slate-400 text-[10px] leading-normal">
-                          {genAiReport.recommended_actions.map((item, idx) => (
+                        <ul className="list-decimal pl-4 space-y-1 text-[#475569] text-[11px]">
+                          {(genAiReport.recommended_actions || []).map((item, idx) => (
                             <li key={idx}>{item}</li>
                           ))}
                         </ul>
                       </div>
                     </div>
- 
-                    <div className="pt-2 border-t border-slate-900/60 text-[10px] text-slate-500 italic">
-                      {genAiReport.analyst_notes}
+
+                    <div className="pt-2 border-t border-[#F1F5F9] text-[11px] text-[#64748B] italic">
+                      Analyst Note: {genAiReport.analyst_notes}
                     </div>
                   </div>
                 </div>
               )}
 
               {/* SHAP Chart */}
-              <div className="glass-panel p-5 space-y-3">
-                <div>
-                  <h3 className="font-semibold text-sm font-sans text-slate-200">
-                    SHAP Decision Attribution values
+              <div className="skeuo-panel p-5 space-y-3">
+                <div className="border-b border-[#F1F5F9] pb-2">
+                  <h3 className="font-bold text-xs uppercase tracking-wider text-[#172033] flex items-center gap-1.5">
+                    <Eye size={14} className="text-blue-600" />
+                    SHAP Mathematical Feature Decision Attribution
                   </h3>
-                  <p className="text-[10px] text-slate-500">
-                    Quantitative effect of features on global validation boundaries (Probability scale).
+                  <p className="text-[11px] text-[#64748B]">
+                    Quantitative Shapley values computing exact percentage probability shifts from the global validation baseline
                   </p>
                 </div>
-                <div className="h-56 relative">
+                <div className="h-56 relative pt-2">
                   <Bar data={getShapChartData()} options={chartOptions} />
                 </div>
               </div>
 
-              {/* Additive values */}
+              {/* Additive Math Values (3 Columns) */}
               <div className="grid grid-cols-3 gap-4">
-                
-                <div className="glass-panel p-3 text-center">
-                  <span className="text-[9px] font-bold uppercase text-slate-500 tracking-wider">Base Probability</span>
-                  <p className="text-base font-mono text-slate-400 font-bold mt-0.5">
+                <div className="skeuo-panel p-3.5 text-center">
+                  <span className="text-[9px] font-bold uppercase text-[#64748B] tracking-wider block">Base Prior Probability</span>
+                  <p className="text-lg font-mono text-[#475569] font-bold mt-0.5">
                     {(explanationData.base_value * 100).toFixed(1)}%
                   </p>
                 </div>
                 
-                <div className="glass-panel p-3 text-center">
-                  <span className="text-[9px] font-bold uppercase text-slate-500 tracking-wider">Shapley Shift</span>
-                  <p className="text-base font-mono text-purple-400 font-bold mt-0.5">
+                <div className="skeuo-panel p-3.5 text-center">
+                  <span className="text-[9px] font-bold uppercase text-[#64748B] tracking-wider block">Shapley Shift</span>
+                  <p className="text-lg font-mono text-purple-700 font-bold mt-0.5">
                     {((explanationData.prediction_probability - explanationData.base_value) * 100) >= 0 ? '+' : ''}
                     {((explanationData.prediction_probability - explanationData.base_value) * 100).toFixed(1)}%
                   </p>
                 </div>
 
-                <div className="glass-panel p-3 text-center relative overflow-hidden">
-                  <div className="absolute left-0 top-0 h-full w-1 bg-red-500" />
-                  <span className="text-[9px] font-bold uppercase text-slate-500 tracking-wider">Final Risk Score</span>
-                  <p className="text-base font-mono font-bold mt-0.5 text-red-400">
+                <div className="skeuo-panel p-3.5 text-center border-l-4 border-l-red-600">
+                  <span className="text-[9px] font-bold uppercase text-[#64748B] tracking-wider block">Final Risk Probability</span>
+                  <p className="text-lg font-mono font-bold mt-0.5 text-red-600">
                     {(explanationData.prediction_probability * 100).toFixed(1)}%
                   </p>
                 </div>
-
               </div>
-
             </>
           )}
-
         </div>
-
       </div>
     </div>
   );

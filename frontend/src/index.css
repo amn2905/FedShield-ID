@@ -1,57 +1,213 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
+:root {
+  --bg-main: #F4F6F8;
+  --surface-primary: #FFFFFF;
+  --surface-secondary: #E9EDF2;
+  --banking-blue: #2563EB;
+  --banking-teal: #0F766E;
+  --text-primary: #172033;
+  --text-secondary: #64748B;
+  --border-color: #DCE3EB;
+}
+
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 font-sans antialiased overflow-x-hidden;
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.08) 0px, transparent 50%),
-      radial-gradient(at 50% 0%, rgba(34, 211, 238, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
-    background-attachment: fixed;
+    background-color: #F4F6F8;
+    color: #172033;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-slate-900/50;
+  background: #F1F5F9;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-800 rounded-full hover:bg-slate-700 transition-colors;
+  background: #CBD5E1;
+  border-radius: 9999px;
+  border: 2px solid #F1F5F9;
 }
 
-/* Glassmorphism Classes */
-.glass-panel {
-  @apply bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-2xl;
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }
 
-.glass-panel-hover {
-  @apply hover:border-slate-700/60 hover:bg-slate-900/60 transition-all duration-300;
+/* Tactile Skeuomorphic Surfaces */
+.skeuo-panel {
+  background: #FFFFFF;
+  border: 1px solid #DCE3EB;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(15, 23, 42, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.gradient-text {
-  @apply bg-gradient-to-r from-cyan-400 via-purple-500 to-emerald-400 bg-clip-text text-transparent;
+.skeuo-panel-hover:hover {
+  box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.06), 0 12px 24px -4px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 1);
+  border-color: #CBD5E1;
 }
 
-/* Keyframe animations */
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 0.2;
-    transform: scale(1);
+/* Tactile Raised Buttons */
+.skeuo-btn-primary {
+  background: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
+  border: 1px solid #1D4ED8;
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.skeuo-btn-primary:hover {
+  background: linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%);
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.skeuo-btn-primary:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.skeuo-btn-secondary {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+  border: 1px solid #DCE3EB;
+  color: #172033;
+  font-weight: 500;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 1);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.skeuo-btn-secondary:hover {
+  background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+  border-color: #CBD5E1;
+  color: #0F172A;
+}
+
+.skeuo-btn-secondary:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.skeuo-btn-danger {
+  background: linear-gradient(180deg, #EF4444 0%, #DC2626 100%);
+  border: 1px solid #B91C1C;
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.skeuo-btn-danger:hover {
+  background: linear-gradient(180deg, #DC2626 0%, #B91C1C 100%);
+}
+
+.skeuo-btn-danger:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* Recessed Inset Inputs */
+.skeuo-input {
+  background: #FFFFFF;
+  border: 1px solid #DCE3EB;
+  border-radius: 9px;
+  color: #172033;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
+  transition: all 0.15s ease-in-out;
+}
+
+.skeuo-input:focus {
+  outline: none;
+  border-color: #2563EB;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Recessed Wells & Track Bars */
+.skeuo-well {
+  background: #E9EDF2;
+  border: 1px solid #DCE3EB;
+  border-radius: 10px;
+  box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.skeuo-card-header {
+  border-bottom: 1px solid #EEF2F6;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FAFCFD 100%);
+  border-top-left-radius: 13px;
+  border-top-right-radius: 13px;
+}
+
+/* Subtle Micro Badge */
+.skeuo-badge {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.skeuo-badge-success {
+  background: #ECFDF5;
+  color: #047857;
+  border-color: #A7F3D0;
+}
+
+.skeuo-badge-warning {
+  background: #FFFBEB;
+  color: #B45309;
+  border-color: #FDE68A;
+}
+
+.skeuo-badge-danger {
+  background: #FEF2F2;
+  color: #B91C1C;
+  border-color: #FECACA;
+}
+
+.skeuo-badge-info {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border-color: #BFDBFE;
+}
+
+.skeuo-badge-neutral {
+  background: #F1F5F9;
+  color: #475569;
+  border-color: #E2E8F0;
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
   }
-  50% {
-    opacity: 0.4;
-    transform: scale(1.05);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 3s infinite ease-in-out;
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

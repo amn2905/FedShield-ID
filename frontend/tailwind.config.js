@@ -4,35 +4,41 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  darkMode: 'class', // Enable dark mode by default for premium dark aesthetics
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'Outfit', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       colors: {
-        // Harmonious Dark Banking Palette
-        navy: {
-          900: '#0A0E1A',
-          800: '#111827',
-          700: '#1F2937',
-          600: '#374151',
-        },
-        emerald: {
-          500: '#10B981',
-          400: '#34D399',
-        },
-        purple: {
-          500: '#8B5CF6',
-          600: '#7C3AED',
-        },
-        cyan: {
-          400: '#22D3EE',
+        banking: {
+          bg: '#F4F6F8',
+          surface: '#FFFFFF',
+          secondary: '#E9EDF2',
+          blue: '#2563EB',
+          blueHover: '#1D4ED8',
+          teal: '#0F766E',
+          text: '#172033',
+          muted: '#64748B',
+          border: '#DCE3EB',
+          borderLight: '#EDF2F7',
+          success: '#16A34A',
+          successBg: '#F0FDF4',
+          successBorder: '#BBF7D0',
+          warning: '#D97706',
+          warningBg: '#FFFBEB',
+          warningBorder: '#FDE68A',
+          danger: '#DC2626',
+          dangerBg: '#FEF2F2',
+          dangerBorder: '#FECACA',
         }
       },
       boxShadow: {
-        'glow': '0 0 15px rgba(34, 211, 238, 0.2)',
-        'glow-green': '0 0 15px rgba(16, 185, 129, 0.25)',
+        'skeuo-card': '0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(15, 23, 42, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
+        'skeuo-card-hover': '0 4px 8px -1px rgba(0, 0, 0, 0.06), 0 12px 24px -4px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
+        'skeuo-button': '0 1px 2px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.35)',
+        'skeuo-button-pressed': 'inset 0 2px 4px rgba(0, 0, 0, 0.12)',
+        'skeuo-inset': 'inset 0 1px 2px rgba(15, 23, 42, 0.07)',
+        'skeuo-inset-deep': 'inset 0 2px 4px rgba(15, 23, 42, 0.1)',
       }
     },
   },

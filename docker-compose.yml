@@ -1,13 +1,12 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15-alpine
     container_name: fedshield-db
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: fedshield
-      POSTGRES_PASSWORD: securepassword
-      POSTGRES_DB: fedshield_db
+      POSTGRES_USER: ${POSTGRES_USER:-fedshield}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-securepassword}
+      POSTGRES_DB: ${POSTGRES_DB:-fedshield_db}
     ports:
       - "5432:5432"
     volumes:
@@ -17,33 +16,58 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - fedshield-net
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: fedshield-backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://fedshield:securepassword@db:5432/fedshield_db
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-fedshield}:${POSTGRES_PASSWORD:-securepassword}@db:5432/${POSTGRES_DB:-fedshield_db}
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./backend:/workspace
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - fedshield-net
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
     container_name: fedshield-frontend
+    restart: unless-stopped
     ports:
       - "3000:80"
-    environment:
-      - VITE_API_URL=http://localhost:8000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - fedshield-net
 
 volumes:
   pgdata:
+    name: fedshield_pgdata
+
+networks:
+  fedshield-net:
+    name: fedshield-net
+    driver: bridge

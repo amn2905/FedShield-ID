@@ -2,7 +2,6 @@ import React from 'react';
 import { 
   ShieldAlert, 
   LayoutDashboard, 
-  Activity, 
   Eye, 
   Key, 
   Cpu, 
@@ -10,43 +9,64 @@ import {
   Users,
   GitMerge,
   FileCheck,
-  Fingerprint
+  Fingerprint,
+  ShieldCheck,
+  Activity,
+  Layers,
+  Lock
 } from 'lucide-react';
 
 const Sidebar = ({ currentPage, setCurrentPage, metrics }) => {
   const navItems = [
-    { id: 'overview', name: 'Executive SOC', icon: LayoutDashboard },
+    { id: 'overview', name: 'Executive SOC', icon: LayoutDashboard, badge: 'Live' },
     { id: 'identity', name: 'Identity Verification', icon: Fingerprint },
     { id: 'trust', name: 'Trust Intelligence', icon: Users },
-    { id: 'compliance', name: 'Compliance Checklist', icon: FileCheck },
+    { id: 'fraud', name: 'Identity Risk Ledger', icon: ShieldAlert, count: metrics?.fraud_transactions },
     { id: 'federated', name: 'Federated Monitor', icon: Cpu },
-    { id: 'explainability', name: 'Explainable AI', icon: Eye },
+    { id: 'explainability', name: 'Explainable AI (XAI)', icon: Eye },
     { id: 'graph', name: 'Knowledge Graph', icon: GitMerge },
-    { id: 'security', name: 'Security Panel', icon: Key },
-    { id: 'fraud', name: 'Identity Risk Ledger', icon: ShieldAlert },
+    { id: 'security', name: 'Security & PQC', icon: Key },
+    { id: 'compliance', name: 'Regulatory Compliance', icon: FileCheck },
   ];
 
+  const threatColor = () => {
+    if (metrics?.threat_level === 'High') return 'text-red-700 bg-red-50 border-red-200';
+    if (metrics?.threat_level === 'Elevated') return 'text-amber-700 bg-amber-50 border-amber-200';
+    return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+  };
+
   return (
-    <aside className="w-64 bg-slate-950/90 backdrop-blur-md border-r border-slate-900 flex flex-col h-screen sticky top-0 overflow-y-auto">
-      {/* Brand Logo & Name */}
-      <div className="p-5 border-b border-slate-900">
+    <aside className="w-64 bg-white border-r border-[#DCE3EB] flex flex-col h-screen sticky top-0 z-30 select-none shadow-[1px_0_4px_rgba(0,0,0,0.02)]">
+      {/* Brand Header */}
+      <div className="p-5 border-b border-[#DCE3EB] bg-gradient-to-b from-white to-[#FAFCFD]">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-tr from-cyan-500 to-purple-600 p-2 rounded-xl shadow-glow">
-            <ShieldAlert size={20} className="text-white" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-b from-blue-600 to-blue-700 flex items-center justify-center text-white shadow-[0_2px_4px_rgba(37,99,235,0.3),inset_0_1px_0_rgba(255,255,255,0.35)] border border-blue-800">
+            <ShieldCheck size={22} className="stroke-[2.2]" />
           </div>
           <div>
-            <h1 className="font-bold text-base leading-tight tracking-wide font-sans">
-              FedShield<span className="text-cyan-400 font-extrabold">-ID</span>
-            </h1>
-            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-semibold mt-0.5">
-              Identity Trust Platform
+            <div className="flex items-center gap-1.5">
+              <h1 className="font-extrabold text-base tracking-tight text-[#172033] font-sans">
+                FedShield<span className="text-blue-600">-ID</span>
+              </h1>
+              <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase rounded bg-blue-50 text-blue-700 border border-blue-200">
+                v3.2
+              </span>
+            </div>
+            <p className="text-[10px] text-[#64748B] font-medium tracking-wide">
+              Privacy-First Banking Trust
             </p>
           </div>
         </div>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      {/* Main Navigation */}
+      <div className="px-3 pt-3 pb-1">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8] px-3">
+          Core Workflows
+        </span>
+      </div>
+
+      <nav className="flex-1 px-3 py-1 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
@@ -54,70 +74,86 @@ const Sidebar = ({ currentPage, setCurrentPage, metrics }) => {
             <button
               key={item.id}
               onClick={() => setCurrentPage(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 text-left ${
                 isActive 
-                  ? 'bg-gradient-to-r from-slate-900 to-slate-900/60 border border-slate-800 text-cyan-400 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/30 border border-transparent'
+                  ? 'bg-gradient-to-b from-blue-50/90 to-blue-100/70 border border-blue-200/90 text-blue-700 shadow-[0_1px_2px_rgba(37,99,235,0.08),inset_0_1px_0_rgba(255,255,255,0.9)]'
+                  : 'text-[#475569] hover:text-[#172033] hover:bg-[#F8FAFC] border border-transparent'
               }`}
             >
-              <Icon size={16} className={isActive ? 'text-cyan-400' : 'text-slate-400'} />
-              {item.name}
+              <div className="flex items-center gap-2.5">
+                <Icon 
+                  size={17} 
+                  className={isActive ? 'text-blue-600 stroke-[2.2]' : 'text-[#64748B] stroke-[1.8]'} 
+                />
+                <span>{item.name}</span>
+              </div>
+
+              {item.badge && (
+                <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                  {item.badge}
+                </span>
+              )}
+              {item.count !== undefined && item.count > 0 && (
+                <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-700 border border-red-200">
+                  {item.count}
+                </span>
+              )}
             </button>
           );
         })}
       </nav>
 
-      {/* Network & Node Status Indicators */}
-      <div className="p-5 border-t border-slate-900 space-y-3 bg-slate-950/40">
-        <div className="space-y-2">
-          <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-            System Telemetry
-          </h3>
-          
-          {/* Aggregator Status */}
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="text-slate-400 flex items-center gap-1.5">
-              <Wifi size={12} className="text-slate-500" />
-              Aggregator
+      {/* Telemetry & Banking Node Card */}
+      <div className="p-4 border-t border-[#DCE3EB] bg-[#F8FAFC]">
+        <div className="rounded-xl border border-[#DCE3EB] bg-white p-3 space-y-2.5 shadow-[inset_0_1px_1px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] flex items-center gap-1.5">
+              <Activity size={12} className="text-blue-600" />
+              Node Telemetry
             </span>
-            <span className="flex items-center gap-1 font-semibold text-emerald-400">
-              <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               ONLINE
             </span>
           </div>
 
-          {/* Encryption Tunnels */}
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="text-slate-400">Tunnel Security</span>
-            <span className={`font-bold px-1.5 py-0.5 rounded text-[8px] uppercase ${
-              metrics?.encryption_type === 'PQC'
-                ? 'bg-purple-950/60 border border-purple-800 text-purple-300'
-                : 'bg-yellow-950/60 border border-yellow-800 text-yellow-300'
-            }`}>
-              {metrics?.encryption_type === 'PQC' ? 'Kyber-768' : 'ECDH-TLS'}
-            </span>
-          </div>
+          <div className="space-y-1.5 text-[11px] pt-0.5">
+            <div className="flex items-center justify-between text-[#64748B]">
+              <span className="flex items-center gap-1.5">
+                <Lock size={12} className="text-[#94A3B8]" />
+                Cryptography
+              </span>
+              <span className="font-semibold text-[#172033] bg-[#F1F5F9] px-1.5 py-0.5 rounded text-[10px] border border-[#E2E8F0]">
+                {metrics?.encryption_type === 'PQC' ? 'Kyber-768 PQC' : 'ECDH-TLS'}
+              </span>
+            </div>
 
-          {/* Threat Level */}
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="text-slate-400">Threat Level</span>
-            <span className={`font-bold uppercase ${
-              metrics?.threat_level === 'High' 
-                ? 'text-red-400' 
-                : metrics?.threat_level === 'Elevated' 
-                  ? 'text-yellow-400' 
-                  : 'text-emerald-400'
-            }`}>
-              {metrics?.threat_level || 'Normal'}
-            </span>
+            <div className="flex items-center justify-between text-[#64748B]">
+              <span className="flex items-center gap-1.5">
+                <ShieldAlert size={12} className="text-[#94A3B8]" />
+                Threat Level
+              </span>
+              <span className={`font-bold px-1.5 py-0.5 rounded text-[10px] border ${threatColor()}`}>
+                {metrics?.threat_level || 'Normal'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between text-[#64748B]">
+              <span className="flex items-center gap-1.5">
+                <Layers size={12} className="text-[#94A3B8]" />
+                Privacy Budget
+              </span>
+              <span className="font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded text-[10px] border border-blue-200">
+                ε = 2.0 (DP)
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Footer Brand Info */}
-        <div className="pt-1 text-center">
-          <p className="text-[9px] text-slate-700">
-            FedShield-ID 3.0 Platform
-          </p>
+        {/* System Node Footer */}
+        <div className="pt-2.5 flex items-center justify-between text-[10px] text-[#94A3B8]">
+          <span>Cluster: Node-Alpha</span>
+          <span className="font-mono">RBI / SOC-2</span>
         </div>
       </div>
     </aside>
