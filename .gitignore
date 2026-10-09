@@ -11,3 +11,8 @@ Thumbs.db
 ~$*
 .pytest_cache/
 
+# Root documents, slides and presentation graphics
+/*.pdf
+/*.docx
+/*.pptx
+/*.png
