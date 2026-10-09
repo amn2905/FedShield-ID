@@ -350,7 +350,306 @@ FedShield-ID/
 
 ---
 
-## 7. Installation & Deployment Guide
+## 7. Database Architecture & Schema Specification
+
+FedShield-ID implements a dual-mode persistence architecture powered by **SQLAlchemy 2.0 ORM**, accommodating both high-throughput **PostgreSQL 15** in containerized production deployments and lightweight zero-configuration **SQLite 3** for local development and testing.
+
+The relational schema is specifically architected to support:
+1. **Continuous Identity & Behavioral Telemetry**: Capturing high-frequency micro-biometrics (keystroke dynamics, click interval, mouse jitter) alongside financial transaction variables.
+2. **Federated Learning & Cryptographic Audit Trails**: Persisting decentralized model weight convergence, differential privacy budgets ($\epsilon$), and post-quantum lattice handshake benchmarks.
+3. **Zero-Trust Insider Threat Auditing**: Tracking administrative database access, privilege escalations, and off-hour bulk data downloads.
+4. **Entity Relationship Graph Topology**: Relational storage of heterogeneous entity nodes and directed multi-hop edges for detecting collusive fraud rings and mule accounts.
+
+---
+
+### 7.1. Entity-Relationship Diagram (ERD)
+
+```mermaid
+erDiagram
+    USER_PROFILES ||--o{ TRANSACTIONS : "initiates"
+    GRAPH_NODES ||--o{ GRAPH_EDGES : "source / target"
+    FEDERATED_ROUNDS ||--o{ SECURITY_LOGS : "cryptographic audit"
+    EMPLOYEE_ACTIVITY_LOGS }|--|| USER_PROFILES : "monitors query access"
+
+    TRANSACTIONS {
+        int id PK "autoincrement, indexed"
+        string bank "Bank partition (Bank A/B/C)"
+        datetime timestamp "UTC creation time"
+        float amount "Transaction monetary value"
+        string merchant "Target merchant entity"
+        float distance_from_home "Distance from home (km)"
+        float device_trust_score "Hardware trust score (0-100)"
+        float location_deviation "Geo deviation anomaly"
+        boolean is_synthetic "Synthetic generation marker"
+        float trust_score "10-vector Trust Score (0-100)"
+        float risk_score "Inverted risk score (100-Trust)"
+        int prediction "0=Legit, 1=Fraud"
+        boolean is_flagged "Security alert status"
+        text xai_explanation "SHAP additive JSON payload"
+        string fraud_type "Taxonomy classification"
+        float confidence_score "Model confidence percentage"
+        string device_id "Hardware fingerprint"
+        string ip_address "Client IP address"
+        string pan_number "PAN identity identifier"
+        string customer_name "Customer full name"
+        float typing_speed "Keystrokes per minute (kpm)"
+        float mouse_jitter "Cursor pixel std-deviation"
+        float click_speed "Average click interval (s)"
+        int failed_login_count "Consecutive login failures"
+        float identity_confidence_score "KYC integrity score"
+        float kyc_risk_score "KYC defect score"
+        float synthetic_identity_score "Synthetic identity risk"
+        float recovery_risk_score "SIM swap / recovery anomaly"
+        float insider_risk_score "Privileged leak risk"
+        string auth_action "Allow, OTP, Step-Up, Block"
+        string auth_reason "RBA policy explanation"
+        string phone_number "Contact telephone"
+        string email_address "Customer email"
+    }
+
+    USER_PROFILES {
+        int customer_id PK "autoincrement, indexed"
+        string customer_name "Customer name"
+        string pan_number "Permanent Account Number"
+        float trust_score "Baseline composite trust"
+        float risk_score "Baseline risk score"
+        float device_reputation "Authorized device rating"
+        float login_consistency "Consistency score"
+        float avg_typing_speed "Baseline typing speed"
+        float avg_click_speed "Baseline click duration"
+        float avg_mouse_jitter "Baseline mouse jitter"
+        string risk_category "Trusted, Low, Med, High"
+        datetime updated_at "Last evaluation timestamp"
+        float identity_confidence_score "KYC integrity baseline"
+        float recovery_risk_score "Recovery risk index"
+        float insider_risk_score "Insider exposure score"
+        string phone_number "Registered mobile"
+        string email_address "Registered email"
+        text auth_history_json "JSON array of login attempts"
+    }
+
+    EMPLOYEE_ACTIVITY_LOGS {
+        int id PK "autoincrement, indexed"
+        datetime timestamp "Event UTC timestamp"
+        string employee_id "Bank staff identifier"
+        string employee_name "Operator name"
+        string action "Login, DB Query, Large Download"
+        string resource "Vault or database accessed"
+        string ip_address "Internal terminal IP"
+        string device_id "Authorized terminal ID"
+        boolean is_suspicious "Zero-trust anomaly flag"
+        float risk_score "Action risk rating (0-100)"
+        text details "Extended audit payload"
+    }
+
+    GRAPH_NODES {
+        string id PK "Entity identifier (CUST, DEV, IP)"
+        string label "Entity type category"
+        text properties_json "Serialized node attributes"
+    }
+
+    GRAPH_EDGES {
+        int id PK "autoincrement"
+        string source FK "Source node ID"
+        string target FK "Target node ID"
+        string type "OWNS, USED_BY, TRANSACTED_WITH"
+    }
+
+    FEDERATED_ROUNDS {
+        int round_number PK "FedAvg iteration round, indexed"
+        datetime timestamp "Aggregation timestamp"
+        float global_accuracy "Global model accuracy"
+        float global_loss "Global model cross-entropy loss"
+        float bank_a_accuracy "Retail division accuracy"
+        float bank_b_accuracy "Card division accuracy"
+        float bank_c_accuracy "Micro-tx division accuracy"
+        float privacy_budget_epsilon "Differential privacy epsilon"
+        float noise_added "Laplace noise scale (b)"
+        string encryption_mode "PQC (Kyber-768) / Classical"
+        text metrics_json "Weight vectors & round telemetry"
+    }
+
+    SECURITY_LOGS {
+        int id PK "autoincrement, indexed"
+        datetime timestamp "Audit event timestamp"
+        string node_name "Participating bank / aggregator"
+        string action "Cryptographic operation"
+        string algorithm "Kyber-768, AES-GCM, Laplace DP"
+        int bytes_transmitted "Ciphertext / payload size"
+        float execution_time_ms "Operation latency in ms"
+        string encryption_status "Success / Failed"
+        text details "Audit payload & benchmark metadata"
+    }
+```
+
+---
+
+### 7.2. Data Dictionary & Table Specifications
+
+#### 1. `transactions`
+The flagship ledger table storing transactional events, behavioral biometrics, federated risk evaluations, and Explainable AI (XAI) outputs.
+
+| Column Name | SQL Data Type | Nullable | Default | Description & Cybersecurity Context |
+|:---|:---|:---:|:---|:---|
+| `id` | `INTEGER` | No (PK) | Auto-inc | Primary key; unique transaction identifier (`index=True`). |
+| `bank` | `VARCHAR(50)` | No | — | Bank partition (`Bank A`, `Bank B`, `Bank C`). |
+| `timestamp` | `TIMESTAMP` | Yes | `utcnow` | UTC timestamp of transaction creation. |
+| `amount` | `FLOAT` | No | — | Transaction monetary value in standard currency units. |
+| `merchant` | `VARCHAR(100)` | No | — | Counterparty payee / merchant entity name. |
+| `distance_from_home` | `FLOAT` | No | — | Geographic distance (km) from customer registered home centroid. |
+| `device_trust_score` | `FLOAT` | No | — | Baseline hardware trust score ($[0, 100]$). |
+| `location_deviation` | `FLOAT` | No | — | Normalized deviation anomaly from standard geo-cluster. |
+| `is_synthetic` | `BOOLEAN` | Yes | `False` | Discriminator flag for synthetic test generation vs live telemetry. |
+| `trust_score` | `FLOAT` | No | — | 10-vector weighted Identity Trust Score ($[0, 100]$). |
+| `risk_score` | `FLOAT` | No | — | Composite risk score ($R = 100 - \text{Trust Score}$). |
+| `prediction` | `INTEGER` | Yes | `0` | Binary ML classification (`0` = Legitimate, `1` = Fraud). |
+| `is_flagged` | `BOOLEAN` | Yes | `False` | Security alert status trigger. |
+| `xai_explanation` | `TEXT` | Yes | `NULL` | Serialized JSON containing Linear SHAP feature attributions and narrative explanation. |
+| `fraud_type` | `VARCHAR(50)` | Yes | `'None'` | Taxonomy classification (`Credit Card`, `Account Takeover`, `Money Laundering`, `Synthetic ID`, `Bot Attack`). |
+| `confidence_score` | `FLOAT` | Yes | `95.0` | ML model prediction confidence percentage. |
+| `device_id` | `VARCHAR(100)` | Yes | `'dev_unknown'` | Hardware / browser canvas fingerprint identifier. |
+| `ip_address` | `VARCHAR(50)` | Yes | `'127.0.0.1'` | Client IPv4 / IPv6 network address. |
+| `pan_number` | `VARCHAR(20)` | Yes | `'UNKNOWN'` | Customer Permanent Account Number (regex validated). |
+| `customer_name` | `VARCHAR(100)` | Yes | `'Walk-in Client'` | Customer full name associated with transaction. |
+| `typing_speed` | `FLOAT` | Yes | `120.0` | Keystroke dynamics in keys per minute (kpm). |
+| `mouse_jitter` | `FLOAT` | Yes | `1.5` | Cursor motion standard deviation in pixel offset (detects bot automation). |
+| `click_speed` | `FLOAT` | Yes | `0.25` | Mean latency between mouse click events (seconds). |
+| `failed_login_count` | `INTEGER` | Yes | `0` | Recent failed authentication attempts within evaluation window. |
+| `identity_confidence_score`| `FLOAT` | Yes | `95.0` | Onboarding KYC validity rating ($[5.0, 100.0]$). |
+| `kyc_risk_score` | `FLOAT` | Yes | `5.0` | KYC inconsistency risk factor. |
+| `synthetic_identity_score` | `FLOAT` | Yes | `5.0` | Synthetic Identity Fraud (SIF) heuristic risk score. |
+| `recovery_risk_score` | `FLOAT` | Yes | `5.0` | Account recovery / SIM-swap risk rating (flags swaps $<72$h). |
+| `insider_risk_score` | `FLOAT` | Yes | `0.0` | Correlated insider threat risk index. |
+| `auth_action` | `VARCHAR(50)` | Yes | `'Allow'` | Dynamic RBA verdict (`Allow`, `OTP`, `Step-Up`, `Face Verification`, `Block`). |
+| `auth_reason` | `VARCHAR(255)` | Yes | `'Optimal behavioral score.'` | Human-readable explanation justifying the RBA enforcement action. |
+| `phone_number` | `VARCHAR(50)` | Yes | `'+91 98765 43210'` | Associated telecom phone number. |
+| `email_address` | `VARCHAR(100)` | Yes | `'customer@bank.com'` | Customer registered contact email. |
+
+---
+
+#### 2. `user_profiles`
+Maintains long-term baseline behavioral profiles, identity trust parameters, and authentication challenge history.
+
+| Column Name | SQL Data Type | Nullable | Default | Description & Cybersecurity Context |
+|:---|:---|:---:|:---|:---|
+| `customer_id` | `INTEGER` | No (PK) | Auto-inc | Primary key; internal customer account identifier (`index=True`). |
+| `customer_name` | `VARCHAR(100)` | No | — | Customer full legal name. |
+| `pan_number` | `VARCHAR(20)` | No | — | Tax / National Identity identifier (PAN). |
+| `trust_score` | `FLOAT` | Yes | `90.0` | Baseline aggregated trust score across sessions ($[0, 100]$). |
+| `risk_score` | `FLOAT` | Yes | `10.0` | Baseline account vulnerability score. |
+| `device_reputation` | `FLOAT` | Yes | `95.0` | Authorized hardware trust rating. |
+| `login_consistency` | `FLOAT` | Yes | `98.0` | Temporal and geolocation login regularity index. |
+| `avg_typing_speed` | `FLOAT` | Yes | `110.0` | Historical baseline typing speed (keys per minute). |
+| `avg_click_speed` | `FLOAT` | Yes | `0.3` | Historical baseline click interval (seconds). |
+| `avg_mouse_jitter` | `FLOAT` | Yes | `1.8` | Historical cursor path deviation baseline (pixels). |
+| `risk_category` | `VARCHAR(50)` | Yes | `'Trusted'` | Risk tier (`Trusted`, `Low Risk`, `Medium Risk`, `High Risk`). |
+| `updated_at` | `TIMESTAMP` | Yes | `utcnow` | Timestamp of last profile model update. |
+| `identity_confidence_score`| `FLOAT` | Yes | `95.0` | Cumulative KYC confidence baseline. |
+| `recovery_risk_score` | `FLOAT` | Yes | `5.0` | Account recovery risk rating. |
+| `insider_risk_score` | `FLOAT` | Yes | `0.0` | Susceptibility or exposure to internal staff tampering. |
+| `phone_number` | `VARCHAR(50)` | Yes | `'+91 98765 43210'` | Primary contact telephone. |
+| `email_address` | `VARCHAR(100)` | Yes | `'customer@bank.com'` | Registered primary email address. |
+| `auth_history_json` | `TEXT` | Yes | `'[]'` | Serialized JSON array of recent authentication attempts and step-up outcomes. |
+
+---
+
+#### 3. `employee_activity_logs`
+Provides immutable zero-trust auditing for internal bank staff, tracking queries against sensitive vaults to mitigate insider threat leakage.
+
+| Column Name | SQL Data Type | Nullable | Default | Description & Cybersecurity Context |
+|:---|:---|:---:|:---|:---|
+| `id` | `INTEGER` | No (PK) | Auto-inc | Primary key; audit log sequence number (`index=True`). |
+| `timestamp` | `TIMESTAMP` | Yes | `utcnow` | Audit event UTC timestamp. |
+| `employee_id` | `VARCHAR(50)` | No | — | Bank personnel identifier (e.g., `EMP_901`). |
+| `employee_name` | `VARCHAR(100)` | No | — | Operator / administrator staff name. |
+| `action` | `VARCHAR(100)` | No | — | Executed action (`Login`, `DB Query`, `Large File Download`, `Privilege Escalation`). |
+| `resource` | `VARCHAR(100)` | No | — | Target database table or vault (e.g., `customer_database`, `ledger_tables`). |
+| `ip_address` | `VARCHAR(50)` | Yes | `'10.0.12.3'` | Internal branch / VPN IP address. |
+| `device_id` | `VARCHAR(100)` | Yes | `'dev_bank_desktop'` | Registered corporate workstation identifier. |
+| `is_suspicious` | `BOOLEAN` | Yes | `False` | Automated insider threat anomaly indicator. |
+| `risk_score` | `FLOAT` | Yes | `0.0` | Heuristic risk score computed for the action ($[0, 100]$). |
+| `details` | `TEXT` | Yes | `NULL` | Contextual metadata (query size, off-hour indicators, payload volume). |
+
+---
+
+#### 4. `graph_nodes`
+Stores vertex entities for the cross-bank knowledge graph used to uncover collusive mule syndicates and synthetic identity rings.
+
+| Column Name | SQL Data Type | Nullable | Default | Description & Cybersecurity Context |
+|:---|:---|:---:|:---|:---|
+| `id` | `VARCHAR(100)` | No (PK) | — | Unique entity identifier (e.g., `CUST_1`, `DEV_A`, `IP_10.0.0.1`, `PAN_1234`). |
+| `label` | `VARCHAR(50)` | No | — | Entity domain (`Customer`, `Device`, `IP`, `PAN`, `Merchant`, `Phone`, `Email`, `Employee`, `Account`). |
+| `properties_json` | `TEXT` | Yes | `'{}'` | JSON dictionary containing dynamic attributes (risk level, account type, display metadata). |
+
+---
+
+#### 5. `graph_edges`
+Stores directed relationship edges linking entity vertices into a searchable fraud ring graph topology.
+
+| Column Name | SQL Data Type | Nullable | Default | Description & Cybersecurity Context |
+|:---|:---|:---:|:---|:---|
+| `id` | `INTEGER` | No (PK) | Auto-inc | Primary key; edge identifier. |
+| `source` | `VARCHAR(100)` | No | — | Source node identifier (maps to `graph_nodes.id`). |
+| `target` | `VARCHAR(100)` | No | — | Target node identifier (maps to `graph_nodes.id`). |
+| `type` | `VARCHAR(50)` | No | — | Semantic relationship link (`OWNS`, `USED_BY`, `TRANSACTED_WITH`, `LINKED_TO`). |
+
+---
+
+#### 6. `federated_rounds`
+Tracks the global parameter aggregation lifecycle, recording loss, accuracy, differential privacy parameters, and post-quantum encryption status across training rounds.
+
+| Column Name | SQL Data Type | Nullable | Default | Description & Cybersecurity Context |
+|:---|:---|:---:|:---|:---|
+| `round_number` | `INTEGER` | No (PK) | — | Sequential FedAvg aggregation epoch / round number (`index=True`). |
+| `timestamp` | `TIMESTAMP` | Yes | `utcnow` | Timestamp of round finalization. |
+| `global_accuracy` | `FLOAT` | No | — | Aggregated global model classification accuracy ($[0.0, 1.0]$). |
+| `global_loss` | `FLOAT` | No | — | Aggregated global logistic regression loss. |
+| `bank_a_accuracy` | `FLOAT` | No | — | Local evaluation accuracy on Bank A test partition. |
+| `bank_b_accuracy` | `FLOAT` | No | — | Local evaluation accuracy on Bank B test partition. |
+| `bank_c_accuracy` | `FLOAT` | No | — | Local evaluation accuracy on Bank C test partition. |
+| `privacy_budget_epsilon` | `FLOAT` | No | — | Differential Privacy parameter $\epsilon$ applied during weight perturbation. |
+| `noise_added` | `FLOAT` | No | — | Calibrated Laplace noise scale parameter ($b = \Delta f / (\epsilon \cdot \ln(N+1))$). |
+| `encryption_mode` | `VARCHAR(50)` | Yes | `'PQC'` | Key encapsulation scheme (`PQC` Kyber-768 ML-KEM or `Classical`). |
+| `metrics_json` | `TEXT` | Yes | `NULL` | Full serialized model coefficients $\mathbf{w}_{\text{global}}$, intercepts, and gradient drift telemetry. |
+
+---
+
+#### 7. `security_logs`
+Cryptographic and zero-trust event ledger recording post-quantum KEM handshakes, differential privacy injections, and latency benchmarks.
+
+| Column Name | SQL Data Type | Nullable | Default | Description & Cybersecurity Context |
+|:---|:---|:---:|:---|:---|
+| `id` | `INTEGER` | No (PK) | Auto-inc | Sequence identifier for audit log (`index=True`). |
+| `timestamp` | `TIMESTAMP` | Yes | `utcnow` | Audit event UTC timestamp. |
+| `node_name` | `VARCHAR(50)` | No | — | Host or client partition (`Bank A`, `Bank B`, `Bank C`, `FedAggregator`). |
+| `action` | `VARCHAR(100)` | No | — | Security operation (`Kyber-768 Key Encapsulation`, `DP Noise Injection`, `AES-256-GCM Decryption`). |
+| `algorithm` | `VARCHAR(100)` | No | — | Cryptographic primitive or protocol version (`CRYSTALS-Kyber-768`, `AES-256-GCM`, `Laplace DP`). |
+| `bytes_transmitted` | `INTEGER` | Yes | `0` | Cryptographic ciphertext or parameter payload volume in bytes. |
+| `execution_time_ms` | `FLOAT` | Yes | `0.0` | Handshake or encapsulation execution time in milliseconds. |
+| `encryption_status` | `VARCHAR(50)` | Yes | `'Success'` | Execution status (`Success`, `Warning`, `Failed`). |
+| `details` | `TEXT` | Yes | `NULL` | Additional diagnostic details (cipher parameters, key fingerprints, error strings). |
+
+---
+
+### 7.3. Storage Engine & Database Initialization
+
+* **Database Engine Auto-Selection**: Controlled by the `DATABASE_URL` environment variable:
+  * **Production (Docker Compose)**: `postgresql://postgres:postgres@db:5432/fedshield` (PostgreSQL 15 Alpine).
+  * **Local Development**: `sqlite:///./fedshield.db` (with `check_same_thread: False` to support multi-threaded FastAPI asynchronous workers).
+* **Automatic Schema Synchronization**: Initialized via SQLAlchemy metadata binding in [`backend/app/database.py`](file:///c:/2025-26/Msc%20Cybersecurity/Projects/FedShield-ID/backend/app/database.py):
+  ```python
+  def init_db():
+      Base.metadata.create_all(bind=engine)
+  ```
+* **Initial Synthetic Seeding**: On startup, [`backend/app/main.py`](file:///c:/2025-26/Msc%20Cybersecurity/Projects/FedShield-ID/backend/app/main.py) checks for existing records; if empty, it populates:
+  * **750 realistic multi-bank transactions** partitioned across Bank A, Bank B, and Bank C with realistic biometric distributions.
+  * **10 baseline user profiles** with KYC risk attributes and behavioral baselines.
+  * **15 initial entity nodes and 18 multi-hop edges** connecting syndicate mule accounts for graph ring detection.
+  * **Historical federated learning rounds** demonstrating convergence metrics and differential privacy budgeting.
+
+---
+
+## 8. Installation & Deployment Guide
 
 ### Prerequisites
 * **Docker & Docker Compose**: Docker Desktop 24+ (WSL2 on Windows, Docker Engine on Linux/macOS)
@@ -449,16 +748,16 @@ npm run dev
 
 ---
 
-## 8. API Reference & Verified Endpoints
+## 9. API Reference & Verified Endpoints
 
 All endpoints are fully implemented and verified against the running FastAPI application.
 
-### 8.1. System & Metrics
+### 9.1. System & Metrics
 * `GET /`: Health check endpoint. Returns service greeting.
 * `GET /dashboard-metrics`: Aggregates active transaction counts, fraud rates, federated model accuracy, bank partition distribution, threat levels, and security scores.
 * `POST /stream-transactions?active={bool}`: Toggles background transaction generator (injects a new synthetic transaction every 3 seconds).
 
-### 8.2. Identity Verification & Trust Intelligence
+### 9.2. Identity Verification & Trust Intelligence
 * `GET /trust-score`: Retrieves seeded user profiles with composite Trust Scores, risk categories, and biometric baselines.
 * `GET /identity-verification`: Retrieves onboarding audit records evaluating PAN, email domain, phone carrier, and synthetic ID indicators.
 * `POST /verify-identity`: Live identity parameter verification endpoint.
@@ -488,7 +787,7 @@ All endpoints are fully implemented and verified against the running FastAPI app
     }
     ```
 
-### 8.3. Risk Ledger & Threat Simulator
+### 9.3. Risk Ledger & Threat Simulator
 * `GET /transactions?bank={str}&is_flagged={bool}&limit={int}&offset={int}`: Paginated transactions ledger with filtering.
 * `POST /predict`: Scores single transaction payloads, updating the ledger with SHAP explanations and trust indicators.
 * `POST /simulate-attack`: Injects specific threat scenarios (`Transaction Fraud`, `Account Takeover`, `Synthetic Identity Fraud`, `Bot Attack`, `Suspicious Recovery`, `Insider Threat`).
@@ -501,7 +800,7 @@ All endpoints are fully implemented and verified against the running FastAPI app
     ```
   * **Response**: Returns injected transaction record, computed trust and risk scores, SHAP explanations, and RBA decision (`Block Access`).
 
-### 8.4. Federated Learning & Cryptography
+### 9.4. Federated Learning & Cryptography
 * `POST /federated-round`: Coordinates a federated training round across Bank A, Bank B, and Bank C.
   * **Request Body**:
     ```json
@@ -515,7 +814,7 @@ All endpoints are fully implemented and verified against the running FastAPI app
 * `GET /security-status`: Returns active quantum-safe tunnel statuses, runtime cryptographic benchmarks, and live Kyber KEM handshake logs.
 * `GET /privacy-status`: Returns current privacy budget $\epsilon$, data leakage risk ratings, and Laplace noise scale history.
 
-### 8.5. XAI, Graph & Compliance
+### 9.5. XAI, Graph & Compliance
 * `GET /explain/{tx_id}`: Returns linear SHAP feature attributions and natural language explanation for a transaction.
 * `GET /fraud-investigation/{tx_id}`: Generates a structured forensic analyst briefing report.
 * `GET /graph-data`: Returns node and edge collections for the entity relationship graph.
@@ -525,7 +824,7 @@ All endpoints are fully implemented and verified against the running FastAPI app
 
 ---
 
-## 9. Verification & Testing Status
+## 10. Verification & Testing Status
 
 ### Codebase Audits & Tests Executed
 * **Frontend Linting (`npm run lint`)**: Passed with **0 errors** (ESLint configured for React 19).
@@ -542,7 +841,7 @@ All endpoints are fully implemented and verified against the running FastAPI app
 
 ---
 
-## 10. Verified Implementation Inventory & Technical Disclosures
+## 11. Verified Implementation Inventory & Technical Disclosures
 
 To maintain academic and professional engineering transparency, the following table details the implementation status of each system component:
 
@@ -563,7 +862,7 @@ To maintain academic and professional engineering transparency, the following ta
 
 ---
 
-## 11. Security, Privacy & Research Considerations
+## 12. Security, Privacy & Research Considerations
 
 1. **Isolation of Credentials**: No production API keys, database credentials, or private keys are committed to the codebase. Configurations use environment variables with fallback defaults.
 2. **Container Security**: Production Dockerfiles build minimal images (`python:3.10-slim`, `nginx:stable-alpine`) and avoid unnecessary build tools in runtime stages.
@@ -572,7 +871,7 @@ To maintain academic and professional engineering transparency, the following ta
 
 ---
 
-## 12. Future Research & Development Roadmap
+## 13. Future Research & Development Roadmap
 
 * **Native liboqs Integration**: Replace simulated Kyber-768 routines with native C-bindings (`pyoqs`) to benchmark physical lattice polynomial multiplication on AVX2 hardware.
 * **Formal DP Accounting**: Integrate Rényi Differential Privacy (RDP) tracking across continuous federated aggregation rounds.
@@ -582,10 +881,11 @@ To maintain academic and professional engineering transparency, the following ta
 
 ---
 
-## 13. Author & Attribution
+## 14. Author & Attribution
 
 **Mohd. Amaan Hamid**  
 MSc Cybersecurity  
 Email: [hamidamaan3@gmail.com](mailto:hamidamaan3@gmail.com)  
+Repository: [amn2905/FedShield-ID](https://github.com/amn2905/FedShield-ID)
 
 *Developed as an advanced cybersecurity engineering and privacy-preserving identity trust research platform.*
